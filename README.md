@@ -1,11 +1,11 @@
 # pokepy :)
 ![Alt text](pokemon.jpg) </br>
-a 2 layer MLP built from scratch using only numpy that generates pokémon-sounding names. no PyTorch, no autograd, every forward pass, backward pass, and gradient update is written by hand.
+a 2 layer MLP built from scratch using only numpy that generates pokémon sounding names. no PyTorch, no autograd, every forward pass, backward pass, and gradient update is written by hand.
 
 ## what is this
 
 I wanted to really understand how neural networks work under the hood, so I built one from scratch using only numpy. no autograd, no `.backward()`, every single gradient is derived and computed manually, including backprop through batchnorm.
-trained on a dataset of pokémon names, the model learns character patterns and generates new names that sound like they could actually be pokémon.
+
 
 ## architecture
 
@@ -30,6 +30,7 @@ azentas </br>
 
 ## training details
 
+- trained on a dataset of pokémon names, the model learns character patterns and generates new names that sound like they could actually be pokémon.
 - 300,000 training steps with minibatches of 32
 - learning rate starts at 0.1, decays to 0.01 at step 100,000
 - final loss around 1.4–1.7
