@@ -44,6 +44,8 @@ W2 = np.random.randn(n_hidden, vocab_size) * 0.1
 b2 = np.random.randn(vocab_size) * 0.1
 bngain = np.random.randn(1, n_hidden) * 0.1 + 1.0
 bnbias = np.random.randn(1, n_hidden) * 0.1
+bn_mean_running = np.zeros((1, n_hidden))
+bn_var_running = np.ones((1, n_hidden))
 parameters = [C, W1, W2, b2, bngain, bnbias]
 
 # training loop
@@ -66,6 +68,8 @@ for i in range(max_steps):
     bndiff2 = bndiff**2
     bnvar = 1/(n-1)*(bndiff2).sum(0, keepdims=True) 
     bnvar_inv = (bnvar + 1e-5)**-0.5
+    bn_mean_running = 0.999 * bn_mean_running + 0.001 * bnmeani
+    bn_var_running = 0.999 * bn_var_running + 0.001 * bnvar
     bnraw = bndiff * bnvar_inv
     hpreact = bngain * bnraw + bnbias
     # Non-linearity
@@ -128,11 +132,7 @@ for _ in range(10):
         emb = C[np.array([context])]
         embcat = emb.reshape(1, -1)
         hprebn = embcat @ W1
-        bnmeani = hprebn.mean(0, keepdims=True)
-        bndiff = hprebn - bnmeani
-        bnvar = 1/(n-1)*(bndiff**2).sum(0, keepdims=True)
-        bnvar_inv = (bnvar + 1e-5)**-0.5
-        bnraw = bndiff * bnvar_inv
+        bnraw = (hprebn - bn_mean_running) / np.sqrt(bn_var_running + 1e-5)
         hpreact = bngain * bnraw + bnbias
         h = np.tanh(hpreact)
         logits = h @ W2 + b2
