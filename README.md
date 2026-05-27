@@ -1,5 +1,5 @@
 # pokepy :)
-
+![Alt text](pokemon.jpg) </br>
 a 2 layer MLP built from scratch using only numpy that generates pokémon-sounding names. no PyTorch, no autograd, every forward pass, backward pass, and gradient update is written by hand.
 
 ## what is this
