@@ -45,5 +45,8 @@ python pokepy.py
 
 you'll need a `pokemon.txt` with one pokémon name per line.
 
-## inpiration
-heavily inspired by andrej karpathy's makemore series, highly recommend if you want to actually understand how this stuff works :)
+## license
+
+MIT
+
+heavily inspired by andrej karpathy's makemore series — highly recommend if you want to actually understand how this stuff works :)
