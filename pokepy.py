@@ -35,7 +35,7 @@ X, Y = build_dataset(words)
 
 # parameters
 n_embd = 10
-n_hidden = 64
+n_hidden = 200
 
 np.random.seed(67)
 C  = np.random.randn(vocab_size, n_embd)
@@ -49,7 +49,7 @@ bn_var_running = np.ones((1, n_hidden))
 parameters = [C, W1, W2, b2, bngain, bnbias]
 
 # training loop
-max_steps = 200000
+max_steps = 300000
 batch_size = 32
 n = batch_size
 lossi = []
@@ -141,7 +141,7 @@ for _ in range(10):
         probs /= probs.sum(1, keepdims=True)
         ix = np.random.choice(vocab_size, p=probs[0])
         context = context[1:] + [ix]
-        if ix == 0:
+        if ix == 0 or len(out) >= 10:  # stop at 10 characters
             break
         out.append(itos[ix])
     print(''.join(out))
