@@ -37,7 +37,7 @@ X, Y = build_dataset(words)
 n_embd = 10
 n_hidden = 200
 
-np.random.seed(67)
+np.random.seed(67)# for reproducibility
 C  = np.random.randn(vocab_size, n_embd)
 W1 = np.random.randn(n_embd * block_size, n_hidden) * (5/3)/((n_embd * block_size)**0.5)
 W2 = np.random.randn(n_hidden, vocab_size) * 0.1
@@ -47,6 +47,8 @@ bnbias = np.random.randn(1, n_hidden) * 0.1
 bn_mean_running = np.zeros((1, n_hidden))
 bn_var_running = np.ones((1, n_hidden))
 parameters = [C, W1, W2, b2, bngain, bnbias]
+
+
 
 # training loop
 max_steps = 300000
