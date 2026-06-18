@@ -1,30 +1,37 @@
 # pokepy :)
+
 ![Alt text](pokemon.jpg) </br>
 
-a character-level language model built completely from scratch using only numpy that generates pokémon sounding names. no PyTorch, no autograd, no frameworks — every forward pass, backward pass, and gradient update is manually implemented.
+a character-level language model built completely from scratch using only numpy that generates pokémon sounding names. no PyTorch, no autograd, no deep learning frameworks — every forward pass, backward pass, and gradient update is manually implemented.
 
-this project started as a way to understand how neural networks actually work under the hood. I first built a simple MLP, then improved it into a WaveNet-style architecture to understand how increasing context length changes what the model can learn.
+this project started as a way to understand how neural networks actually work under the hood. I first built a simple MLP, then expanded it into a WaveNet-style architecture to explore how increasing context length changes what a model can learn.
+
+## demo
+
+try it live:
+
+https://huggingface.co/spaces/anayshekhar/pokepy-demo
 
 ---
 
-## what is this
+# what is this
 
-I wanted to understand the foundations behind language models, so I built a mini character-level text generator from scratch.
+I wanted to understand the foundations behind language models, so I built a mini character-level text generator completely from scratch.
 
-instead of using existing deep learning libraries, I implemented:
+instead of relying on existing machine learning libraries, I manually implemented:
 
-- embeddings
-- linear layers
-- batch normalization
-- tanh activations
-- softmax
-- cross entropy loss
-- backpropagation
-- gradient descent updates
+* embeddings
+* linear layers
+* batch normalization
+* tanh activations
+* softmax
+* cross entropy loss
+* backpropagation
+* gradient descent
 
 everything runs only with numpy.
 
-the model learns patterns from pokémon names and generates completely new names based on the character relationships it learned.
+the model learns character patterns from pokémon names and generates new names based on the relationships it discovers.
 
 ---
 
@@ -34,20 +41,35 @@ the model learns patterns from pokémon names and generates completely new names
 
 the first version was a simple multilayer perceptron:
 
-- character embedding layer (10-dimensional vectors)
-- linear layer
-- batch normalization
-- tanh activation
-- output linear layer
-- softmax + cross entropy loss
+* character embedding layer (10-dimensional vectors)
+* linear layer
+* batch normalization
+* tanh activation
+* output linear layer
+* softmax + cross entropy loss
 
-hidden size: `200 neurons`
+hidden size:
 
-context length: `3 characters`
+```
+200 neurons
+```
 
-meaning the model only looks at the previous 3 characters to predict the next character.
+context length:
 
-example: `pik` predicts `a`, then the context shifts: `ika` and predicts the next character.
+```
+3 characters
+```
+
+this means the model only looks at the previous 3 characters to predict the next one.
+
+example:
+
+```
+pik → a
+ika → next character
+```
+
+the context continuously shifts as the model generates.
 
 ---
 
@@ -55,11 +77,14 @@ example: `pik` predicts `a`, then the context shifts: `ika` and predicts the nex
 
 training:
 
+```
 train loss: 1.294
 validation loss: 3.504
+```
 
 generated names:
 
+```
 blipedeedo
 rosalini
 lect
@@ -70,8 +95,9 @@ swannon
 hippowdon
 the
 larvinerao
+```
 
-the MLP was able to learn basic character patterns, but because the context window was only 3 characters, it struggled with longer dependencies.
+the MLP learned basic character relationships, but the limited context window made it difficult to understand longer patterns inside names.
 
 ---
 
@@ -80,130 +106,136 @@ the MLP was able to learn basic character patterns, but because the context wind
 ## why I built this
 
 the biggest limitation of the MLP was context length.
-with only 3 characters, the model could only see a tiny part of each name.
 
-for example, `charizard` — the MLP only sees:
+with only 3 characters of context, the model could only see a small part of each name.
+
+for example:
+
+```
+charizard
 
 cha
-
 har
-
 ari
-
 riz
+```
 
-instead of understanding the entire structure.
-WaveNet fixes this by gradually combining character groups, allowing the model to see a larger context without making the network extremely large.
+the model does not understand the larger structure of the word.
+
+WaveNet improves this by gradually combining groups of characters, allowing the model to build larger representations without massively increasing the number of parameters.
 
 ---
 
 ## architecture
 
-WaveNet style model:
+WaveNet-style architecture:
 
-- character embedding layer (10 dimensions)
-- FlattenConsecutive layers
-- multiple linear layers
-- batch normalization
-- tanh activations
-- final output layer
-- softmax + cross entropy
+* character embedding layer (10 dimensions)
+* FlattenConsecutive layers
+* multiple linear layers
+* batch normalization
+* tanh activations
+* final output layer
+* softmax + cross entropy loss
 
-context length: `8 characters`
+context length:
 
-the model slowly compresses information:
+```
 8 characters
+```
+
+the model builds information hierarchically:
+
+```
+characters
 
 ↓
 
-combine pairs
+combined character groups
 
 ↓
 
-larger features
+higher level features
 
 ↓
 
-predict next character
+next character prediction
+```
 
 ---
 
 ## WaveNet results
 
 training:
-train loss: 1.949
 
-validation loss: 2.747
+```
+train loss: 1.949
+validation loss: 2.748
+```
 
 generated names:
+
+```
 gropinig
-
 pyghislacat
-
 poloun
-
 hoongel
-
 spuspiniyan
-
 ongtover
-
 kasato
-
 xel
-
 felspipon
-
 linmatie
-
 asherron
-
 beatdiqdule
-
 madstutf
-
 drudona
-
 rouzslra
-
 liwsywunk
-
 galeon
-
 magnoslaws
-
 araidono
-
 lickopt
+```
 
-the WaveNet generated longer and more structured names because it had a larger context window.
+WaveNet produced longer and more structured generations because it had access to a larger context window.
 
 ---
 
 # MLP vs WaveNet
 
-| | MLP | WaveNet |
-|---|---|---|
-| Context size | 3 characters | 8 characters |
-| Hidden size | 200 | 32 |
-| Training steps | 300,000 | 10,000 |
-| Architecture | Single hidden layer | Hierarchical layers |
-| Parameters | Larger | More efficient |
-| Generation | Shorter patterns | Longer structures |
+|                  | MLP                 | WaveNet             |
+| ---------------- | ------------------- | ------------------- |
+| Context size     | 3 characters        | 8 characters        |
+| Hidden size      | 200                 | 32                  |
+| Training steps   | 300,000             | 10,000              |
+| Architecture     | Single hidden layer | Hierarchical layers |
+| Feature learning | Direct              | Progressive         |
+| Main advantage   | Simple baseline     | Larger context      |
 
 ---
 
-# things I struggled with
+# challenges
 
 ## context length
 
 one of the biggest lessons from this project was understanding why context matters.
 
-a model with a small context window can only learn local patterns, but struggles with longer relationships.
+a model with a smaller context window can only learn local patterns, while larger context allows it to understand longer relationships.
 
-in the MLP: `context = 3 characters`
+the MLP used:
 
-the model mostly learned small patterns between characters. WaveNet improved this by giving the model access to more previous characters.
+```
+3 character context
+```
+
+while WaveNet increased this to:
+
+```
+8 character context
+```
+
+which allowed it to capture more structure from names.
 
 ---
 
@@ -211,14 +243,14 @@ the model mostly learned small patterns between characters. WaveNet improved thi
 
 implementing batch normalization manually was one of the hardest parts.
 
-I had to track:
+I had to handle:
 
-- batch mean
-- batch variance
-- running mean
-- running variance
+* batch mean
+* batch variance
+* running mean
+* running variance
 
-because training and inference behave differently.
+training and inference use different statistics, so saving the running values was required for the deployed model to generate correctly.
 
 ---
 
@@ -230,15 +262,23 @@ instead of using:
 loss.backward()
 ```
 
-I manually calculated gradients for every layer.
+I manually calculated gradients for:
 
-this helped me understand how neural networks actually learn instead of treating them like a black box.
+* embeddings
+* linear layers
+* batch normalization
+* tanh activations
+* softmax cross entropy
+
+this helped me understand how neural networks actually learn instead of treating them as black boxes.
 
 ---
 
 ## random generation
 
-generation is probabilistic. even with the same trained model, every run can create different names because the next character is sampled from the probability distribution.
+generation is probabilistic.
+
+even with the same trained model, outputs change because the next character is sampled from the model's probability distribution.
 
 ---
 
@@ -246,38 +286,96 @@ generation is probabilistic. even with the same trained model, every run can cre
 
 ## MLP
 
-- dataset: pokémon names
-- optimizer: SGD
-- batch size: 32
-- steps: 300,000
-- learning rate: `0.1 → 0.01 after 100k steps`
+dataset:
 
-parameters: `C`, `W1`, `W2`, `b2`, `bngain`, `bnbias`
+```
+pokemon names
+```
+
+training:
+
+* optimizer: SGD
+* batch size: 32
+* steps: 300,000
+* learning rate: `0.1 → 0.01 after 100k steps`
+
+parameters:
+
+```
+C
+W1
+W2
+b2
+bngain
+bnbias
+```
+
+---
 
 ## WaveNet
 
-- dataset: pokémon names
-- optimizer: SGD
-- batch size: 32
-- steps: 10,000
-- learning rate: `0.1 → 0.01 after 8000 steps`
+dataset:
 
-parameters: `embeddings`, `linear layers`, `batchnorm parameters`
+```
+pokemon names
+```
+
+training:
+
+* optimizer: SGD
+* batch size: 32
+* steps: 10,000
+* learning rate: `0.1 → 0.01 after 8000 steps`
+
+parameters:
+
+```
+embeddings
+linear layers
+batch normalization parameters
+```
+
+---
+
+# deployment
+
+the model is deployed using Hugging Face Spaces with Gradio.
+
+the demo loads the trained numpy weights and runs inference without PyTorch or external ML frameworks.
+
+the deployed model uses:
+
+* trained embeddings
+* linear layer weights
+* batch normalization parameters
+* vocabulary mappings
+
+the entire inference pipeline runs using manually implemented numpy layers.
 
 ---
 
 # usage
 
+install dependencies:
+
 ```bash
 pip install numpy
+```
+
+run:
+
+```bash
 python mlp.py
 python wavenet.py
 ```
 
-you'll need:
+you will need:
+
+```
 data/
 
 └── pokemon.txt
+```
 
 with one pokémon name per line.
 
@@ -287,7 +385,7 @@ with one pokémon name per line.
 
 this project taught me how language models are built from the ground up.
 
-the biggest takeaway was that improving a model is not always about making it bigger — changing the architecture and giving it better ways to understand context can make a huge difference.
+the biggest takeaway was that improving a model is not always about making it bigger. changing the architecture and giving the model better ways to understand context can have a larger impact than simply adding more parameters.
 
 ---
 
