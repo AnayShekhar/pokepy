@@ -1,6 +1,7 @@
 import gradio as gr
 import numpy as np
 import os
+import sys
 import re
 
 # Set seed for reproducibility
@@ -69,12 +70,22 @@ class Sequential:
 
 
 # ------------------------------------------------------------------------------
-# Local File & Vocabulary Setup
+# Asset Path Resolution Utility (PyInstaller Bundling Support)
 # ------------------------------------------------------------------------------
-# Dynamically resolve absolute path to the pokepy-demo directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+def get_asset_path(relative_path):
+    """ Resolves absolute paths for local development and PyInstaller extraction """
+    try:
+        # PyInstaller unpacks data files into a temporary folder called _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
 
-words = open(os.path.join(BASE_DIR, "pokemon.txt")).read().splitlines()
+
+# ------------------------------------------------------------------------------
+# Vocabulary & Dataset Extraction Setup
+# ------------------------------------------------------------------------------
+words = open(get_asset_path("pokemon.txt")).read().splitlines()
 words = [re.sub(r"[^a-z]", "", w.lower()) for w in words]
 words = [w for w in words if len(w) > 0]
 
@@ -110,38 +121,38 @@ model = Sequential([
 
 emb_layer = Embedding(vocab_size, 10)
 
-# Load target matrix layers explicitly using absolute lookups
-emb_layer.weight = np.load(os.path.join(BASE_DIR, "C.npy"))
+# Load target matrix weights explicitly using runtime asset paths
+emb_layer.weight = np.load(get_asset_path("C.npy"))
 
 for i, layer in enumerate(model.layers):
     if i == 1:
-        layer.weight = np.load(os.path.join(BASE_DIR, "layer_1_weight.npy"))
+        layer.weight = np.load(get_asset_path("layer_1_weight.npy"))
     if i == 2:
-        layer.gamma = np.load(os.path.join(BASE_DIR, "layer_2_gamma.npy"))
-        layer.beta = np.load(os.path.join(BASE_DIR, "layer_2_beta.npy"))
-        layer.running_mean = np.load(os.path.join(BASE_DIR, "layer_2_mean.npy"))
-        layer.running_var = np.load(os.path.join(BASE_DIR, "layer_2_var.npy"))
+        layer.gamma = np.load(get_asset_path("layer_2_gamma.npy"))
+        layer.beta = np.load(get_asset_path("layer_2_beta.npy"))
+        layer.running_mean = np.load(get_asset_path("layer_2_mean.npy"))
+        layer.running_var = np.load(get_asset_path("layer_2_var.npy"))
     if i == 5:
-        layer.weight = np.load(os.path.join(BASE_DIR, "layer_5_weight.npy"))
+        layer.weight = np.load(get_asset_path("layer_5_weight.npy"))
     if i == 6:
-        layer.gamma = np.load(os.path.join(BASE_DIR, "layer_6_gamma.npy"))
-        layer.beta = np.load(os.path.join(BASE_DIR, "layer_6_beta.npy"))
-        layer.running_mean = np.load(os.path.join(BASE_DIR, "layer_6_mean.npy"))
-        layer.running_var = np.load(os.path.join(BASE_DIR, "layer_6_var.npy"))
+        layer.gamma = np.load(get_asset_path("layer_6_gamma.npy"))
+        layer.beta = np.load(get_asset_path("layer_6_beta.npy"))
+        layer.running_mean = np.load(get_asset_path("layer_6_mean.npy"))
+        layer.running_var = np.load(get_asset_path("layer_6_var.npy"))
     if i == 9:
-        layer.weight = np.load(os.path.join(BASE_DIR, "layer_9_weight.npy"))
+        layer.weight = np.load(get_asset_path("layer_9_weight.npy"))
     if i == 10:
-        layer.gamma = np.load(os.path.join(BASE_DIR, "layer_10_gamma.npy"))
-        layer.beta = np.load(os.path.join(BASE_DIR, "layer_10_beta.npy"))
-        layer.running_mean = np.load(os.path.join(BASE_DIR, "layer_10_mean.npy"))
-        layer.running_var = np.load(os.path.join(BASE_DIR, "layer_10_var.npy"))
+        layer.gamma = np.load(get_asset_path("layer_10_gamma.npy"))
+        layer.beta = np.load(get_asset_path("layer_10_beta.npy"))
+        layer.running_mean = np.load(get_asset_path("layer_10_mean.npy"))
+        layer.running_var = np.load(get_asset_path("layer_10_var.npy"))
     if i == 12:
-        layer.weight = np.load(os.path.join(BASE_DIR, "layer_12_weight.npy"))
-        layer.bias = np.load(os.path.join(os.path.join(BASE_DIR, "layer_12_bias.npy")))
+        layer.weight = np.load(get_asset_path("layer_12_weight.npy"))
+        layer.bias = np.load(get_asset_path("layer_12_bias.npy"))
 
 
 # ------------------------------------------------------------------------------
-# Real-time Dynamic Inference Generator
+# Inference Loop Logic
 # ------------------------------------------------------------------------------
 def generate_name():
     context = [0] * block_size
@@ -162,7 +173,7 @@ def generate_name():
 
 
 # ------------------------------------------------------------------------------
-# Gradio Interface Setup
+# Gradio Native Desktop Interface Configuration
 # ------------------------------------------------------------------------------
 demo = gr.Interface(
     fn=generate_name,
@@ -173,5 +184,5 @@ demo = gr.Interface(
 )
 
 if __name__ == "__main__":
-    # Expose globally on port 10000 for standard web serving containers
+    # Launch locally on standard port 10000
     demo.launch(server_name="0.0.0.0", server_port=10000)

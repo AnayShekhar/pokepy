@@ -8,9 +8,12 @@ this project started as a way to understand how neural networks actually work un
 
 ## demo
 
-try it live:
+try it live (local desktop):
 
-https://huggingface.co/spaces/anayshekhar/pokepy-demo
+for mac users, double click PokepyLauncher.command to launch the application.
+for windows users, double click PokepyLauncher.bat to launch the application.
+
+once running, the terminal will spin up a local matrix-inference engine. open your browser and navigate to: http://localhost:10000
 
 ---
 
