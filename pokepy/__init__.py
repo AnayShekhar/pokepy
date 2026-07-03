@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 import re
+import importlib.resources  # Native, standard library wrapper
 
 # Set seed for reproducibility
 np.random.seed(67)
@@ -70,16 +71,30 @@ class Sequential:
 
 
 # ------------------------------------------------------------------------------
-# Asset Path Resolution Utility (PyInstaller Bundling Support)
+# Robust Asset Path Resolution (Supports PyInstaller, PyPI Modern Installs)
 # ------------------------------------------------------------------------------
-def get_asset_path(relative_path):
-    """ Resolves absolute paths for local development and PyInstaller extraction """
+def get_asset_path(filename):
+    """ Resolves absolute paths safely across dev environments, PyInstaller, and pip distribution """
+    # 1. Check for PyInstaller runtime unpack folder
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, filename)
+    
+    # 2. Direct fallback to checking adjacent to the file location itself
+    # This works flawlessly for flat modules installed via setuptools
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    local_path = os.path.join(base_path, filename)
+    if os.path.exists(local_path):
+        return local_path
+        
+    # 3. Structural fallback via importlib
     try:
-        # PyInstaller unpacks data files into a temporary folder called _MEIPASS
-        base_path = sys._MEIPASS
+        ref = importlib.resources.files("pokepy").joinpath(filename)
+        if ref.exists():
+            return str(ref)
     except Exception:
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, relative_path)
+        pass
+        
+    return local_path
 
 
 # ------------------------------------------------------------------------------
@@ -154,35 +169,54 @@ for i, layer in enumerate(model.layers):
 # ------------------------------------------------------------------------------
 # Inference Loop Logic
 # ------------------------------------------------------------------------------
-def generate_name():
+def generate_name(*args):
+    """ Generates a single Pokemon name back out using the sequence framework """
     context = [0] * block_size
     out = []
     while True:
+        # Wrap context array to form shape (1, 8) -> Embedding yields (1, 8, 10)
         emb = emb_layer(np.array([context]))
         logits = model(emb)
-        logits -= logits.max(axis=1, keepdims=True)
-        probs = np.exp(logits)
-        probs /= probs.sum(axis=1, keepdims=True)
         
-        ix = np.random.choice(vocab_size, p=probs[0])
+        # Flatten the 2D output (1, vocab_size) down to 1D array for tracking probabilities
+        logits = logits.flatten()
+        logits -= logits.max()
+        probs = np.exp(logits)
+        probs /= probs.sum()
+        
+        ix = np.random.choice(vocab_size, p=probs)
         context = context[1:] + [ix]
         if ix == 0:
             break
         out.append(itos[ix])
-    return "".join(out)
+    return "".join(out).capitalize()
 
 
 # ------------------------------------------------------------------------------
-# Gradio Native Desktop Interface Configuration
+# Gradio Blocks Layout Definition
 # ------------------------------------------------------------------------------
-demo = gr.Interface(
-    fn=generate_name,
-    inputs=None,
-    outputs="text",
-    title="pokepy",
-    description="A character-level pokemon name generator built from scratch using NumPy"
-)
+with gr.Blocks(title="pokepy") as demo:
+    gr.Markdown("# pokepy")
+    gr.Markdown("A character-level pokemon name generator built from scratch using NumPy.")
+    
+    with gr.Row():
+        with gr.Column():
+            generate_btn = gr.Button("Generate Name", variant="primary")
+        with gr.Column():
+            output_text = gr.Textbox(label="Generated Pokémon Name", interactive=False)
+            
+    # Explicitly map the click event without passing unhashable structures
+    generate_btn.click(
+        fn=generate_name,
+        inputs=[],
+        outputs=[output_text]
+    )
+
+
+def main():
+    # 127.0.0.1 directly circumvents internal proxy exceptions on local developer setups
+    print("Initializing PokePy local production instance...")
+    demo.launch(server_name="127.0.0.1", server_port=7860, share=True)
 
 if __name__ == "__main__":
-    # Launch locally on standard port 10000
-    demo.launch(server_name="0.0.0.0", server_port=10000)
+    main()

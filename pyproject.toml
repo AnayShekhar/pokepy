@@ -1,0 +1,29 @@
+[project]
+name = "pokepy-generator"
+version = "1.1.0"
+description = "A character-level language model built from scratch using only numpy."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24.0",
+    "gradio>=4.44.1",
+    "jinja2<3.1.5",
+    "huggingface-hub<=0.24.0",
+    "starlette>=0.40.0,<0.46.0"  # <-- Keeps the Gradio layout from throwing the Jinja cache error
+]
+
+[project.scripts]
+pokepy = "pokepy.__init__:main"
+
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["pokepy"]
+
+[tool.setuptools.package-data]
+pokepy = ["*.npy", "*.txt"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["README.md", "pyproject.toml"]
